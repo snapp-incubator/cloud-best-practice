@@ -4,7 +4,7 @@ data "openstack_compute_flavor_v2" "flavor" {
 
 data "openstack_networking_port_v2" "port" {
   for_each   = toset(var.network_list)
-  name       = "${var.cluster_id}-${var.name}-${each.value}"
+  name       = "${var.name}-${each.value}"
   depends_on = [openstack_networking_port_v2.private]
 }
 
@@ -14,7 +14,7 @@ data "openstack_images_image_v2" "centos7" {
 }
 
 resource "openstack_compute_instance_v2" "instance" {
-  name = "${var.cluster_id}-${var.name}"
+  name = "${var.name}"
   key_pair = var.keypair
 
   flavor_id = data.openstack_compute_flavor_v2.flavor.id

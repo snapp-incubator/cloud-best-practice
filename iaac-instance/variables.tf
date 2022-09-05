@@ -1,11 +1,4 @@
-
-variable "base_domain" {
-  type = string
-}
 variable "region" {
-  type = string
-}
-variable "cluster_id" {
   type = string
 }
 
