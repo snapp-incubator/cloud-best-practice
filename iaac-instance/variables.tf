@@ -29,6 +29,6 @@ variable "instance_count" {
   description = "Number of masters"
 }
 
-variable "keypair_public_key_path" {
+variable "keypair" {
   type = string
 }

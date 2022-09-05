@@ -15,7 +15,7 @@ data "openstack_images_image_v2" "centos7" {
 
 resource "openstack_compute_instance_v2" "instance" {
   name = "${var.cluster_id}-${var.name}"
-
+  key_pair = var.keypair
 
   flavor_id = data.openstack_compute_flavor_v2.flavor.id
 

@@ -24,7 +24,7 @@ variable "region" {
 variable "base_domain" {
   type = string
 }
-variable "sshPublicKey" {
+variable "keypair" {
   type = string
 }
 variable "flavor_name" {
