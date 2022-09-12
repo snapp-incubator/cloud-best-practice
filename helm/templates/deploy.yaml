@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "tmpl.fullname" . }}
+  labels:
+    {{- include "tmpl.labels" (dict "context" . "component" .Values.name "name" .Values.name) | nindent 4 }}
+spec:
+  {{- if eq .Values.minReplicas .Values.maxReplicas }}
+  replicas: {{ .Values.minReplicas }}
+  {{- end }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "tmpl.selectorLabels" (dict "context" . "name" .Values.name) | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: TODO
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "tmpl.selectorLabels" (dict "context" . "name" .Values.name) | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tmpl.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{- include "tmpl.image" . -}}"
+          {{- if .Values.image.digest }}
+          imagePullPolicy: IfNotPresent
+          {{- else }}
+          imagePullPolicy: Always
+          {{- end }}
+          env:
+          {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: {{ $v }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            limits:
+              cpu: {{- toYaml .Values.cpu }}
+              memory: {{- toYaml .Values.memory }}
+          volumeMounts:
+
+          {{- range .Values.emptyDir }}
+          - name: {{ .name }}
+            mountPath: {{ .mountPath }}
+          {{- end }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ include "tmpl.fullname" . }}
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - {{ include "tmpl.name" . }}-{{ .Values.name }}
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - {{ .Values.name }}
+            topologyKey: "kubernetes.io/hostname"
+      volumes:
+      {{- range .Values.emptyDir }}
+      - name: {{ .name }}
+      {{- end }}
+      - configMap:
+          defaultMode: 420
+          name: env
+        name: env

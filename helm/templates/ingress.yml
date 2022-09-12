@@ -1,0 +1,37 @@
+{{- if .Values.ingress -}}
+{{- $fullName := include "tmpl.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    router: {{ .Values.ingress.type }}
+    {{ with .Values.ingress.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- include "tmpl.labels" (dict "context" . "component" .Values.name "name" .Values.name) | nindent 4 }}
+  annotations:
+    route.openshift.io/termination: edge
+    {{- if eq .Values.ingress.type "public" }}
+    cert-manager.io/cluster-issuer: letsencrypt-http01
+    {{- end }}
+  {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ $fullName }}-ing-tls
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $.Values.port }}
+{{- end }}
