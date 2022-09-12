@@ -1,0 +1,56 @@
+# ns: whatever in argocd
+# app name: whatever in argocd
+# image: {{ns}}/{{deployment-name}} is defined in argocd repo, together with strategy
+# update-strategy: digest # digest semver static (digest for staging, semver for prod)
+# region_type: "production" in argocd
+
+
+name: sample
+image:
+  tag: "0.1.0"
+  digest: ""
+port: 4000 #standard
+cpu: 500m
+memory: 128Mi
+minReplicas: 2 # if min == max then hpa disabled
+maxReplicas: 5
+configMap:
+- mountPath: /opt/apps/.env
+  name: env
+  subPath: .env
+env:
+  SOME_ENV: someValue
+  SOME_ENV2: somevalue2
+emptyDir:
+- mountPath: /opt/apps/storage/framework/cache
+  name: data
+- mountPath: /opt/apps/storage/framework/views
+  name: data-view
+- mountPath: /opt/apps/bootstrap/cache
+  name: cache
+ingress:
+  type: private # public, private
+  host: example.com
+  labels:
+    whitelist.haproxy.io: "1.1.1.1,2.2.2.2"
+
+livenessProbe: {}
+  # httpGet:
+  #   path: /healthz
+  #   port: 4000
+  #   # httpHeaders:
+  #   # - name: Custom-Header
+  #   #   value: Awesome
+  # initialDelaySeconds: 3
+  # periodSeconds: 3
+  # failureThreshold: 3
+  # successThreshold: 1
+
+readinessProbe: {}
+
+startupProbe: {}
+  # httpGet:
+  #   path: /healthz
+  #   port: liveness-port
+  # failureThreshold: 30
+  # periodSeconds: 10
